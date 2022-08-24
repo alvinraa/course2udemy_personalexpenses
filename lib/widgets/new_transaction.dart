@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class NewTransaction extends StatefulWidget {
   final Function addTransaction;
@@ -13,25 +14,43 @@ class NewTransaction extends StatefulWidget {
 }
 
 class _NewTransactionState extends State<NewTransaction> {
-  final titleController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _amountController = TextEditingController();
+  DateTime? _selectedDate;
 
-  final amountController = TextEditingController();
-
-  void submitData() {
-    final enteredTitle = titleController.text;
-    final enteredAmount = double.parse(amountController.text);
+  void _submitData() {
+    final enteredTitle = _titleController.text;
+    final enteredAmount = double.parse(_amountController.text);
 
     //apabila kosongg tidak akan melakukan tindakan apapun
-    if (enteredTitle.isEmpty || enteredAmount <= 0) {
+    if (enteredTitle.isEmpty || enteredAmount <= 0 || _selectedDate == null) {
       return;
     }
 
     widget.addTransaction(
       enteredTitle,
       enteredAmount,
+      _selectedDate,
     );
 
     Navigator.of(context).pop();
+  }
+
+  void _datePicker() {
+    showDatePicker(
+            context: context,
+            initialDate: DateTime.now(),
+            firstDate: DateTime(1950),
+            lastDate: DateTime(2050))
+        .then((value) {
+      if (value == null) {
+        return;
+      }
+      setState(() {
+        _selectedDate = value;
+      });
+      print(value);
+    });
   }
 
   @override
@@ -44,26 +63,53 @@ class _NewTransactionState extends State<NewTransaction> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
             TextField(
-              decoration: InputDecoration(labelText: 'Title'),
+              decoration: const InputDecoration(labelText: 'Title'),
               // onChanged: (value) {
               //   titleInput = value;
               // },
               // daripada menggunakan onchange, lebih baik menggunakan controller.
               //controller menyimpan user input
-              controller: titleController,
+              controller: _titleController,
+              textInputAction: TextInputAction.next,
             ),
             TextField(
-              decoration: InputDecoration(labelText: 'Amount'),
-              controller: amountController,
+              decoration: const InputDecoration(labelText: 'Amount'),
+              controller: _amountController,
               keyboardType: TextInputType.number,
               //(_) annonymous function yang tidak mengambil output dari submit
-              onSubmitted: (_) => submitData(),
+              // onSubmitted: (_) => _submitData(),
+
+              textInputAction: TextInputAction.next,
             ),
-            TextButton(
-              onPressed: submitData,
+            Container(
+              height: 70,
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      _selectedDate == null
+                          ? 'No date chosen!'
+                          : 'Picked date : ${DateFormat('EEEE, d MMM y', 'id').format(_selectedDate!)}',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  TextButton(
+                      onPressed: _datePicker,
+                      child: Text(
+                        'Choose date',
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ))
+                ],
+              ),
+            ),
+            ElevatedButton(
+              onPressed: _submitData,
               child: Text(
                 'Add Transaction',
-                style: TextStyle(color: Colors.purple),
+                style: Theme.of(context).textTheme.button,
               ),
             )
           ],

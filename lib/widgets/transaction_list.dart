@@ -5,63 +5,68 @@ import '../models/transaction.dart';
 
 class TransactionList extends StatelessWidget {
   final List<Transaction> transactions;
+  final Function deleteTransactions;
 
   TransactionList({
     required this.transactions,
+    required this.deleteTransactions,
     Key? key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 350,
-      color: Colors.grey[100],
-      //Listview sama dengan row/column, namun bisa langsung di scroll, dan bisa diberikan scrollDirection
-      child: ListView.builder(
-        scrollDirection: Axis.vertical,
-        itemCount: transactions.length,
-        itemBuilder: (BuildContext context, int index) {
-          return Card(
-            child: Row(
-              children: <Widget>[
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 10,
-                  ),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                      border: Border.all(
-                          color: Theme.of(context).primaryColorDark, width: 2)),
-                  child: Text(
-                    '\$ ${transactions[index].amount.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      color: Theme.of(context).primaryColorDark,
+    return transactions.isEmpty
+        ? Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Text('No transaction added yet',
+                  style: Theme.of(context).textTheme.headline6),
+              SizedBox(height: 24),
+              Container(
+                height: 300,
+                child: Image.asset(
+                  'assets/images/empty.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ],
+          )
+        : ListView.builder(
+            scrollDirection: Axis.vertical,
+            itemCount: transactions.length,
+            itemBuilder: (BuildContext context, int index) {
+              return Card(
+                margin: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 10,
+                ),
+                elevation: 2,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    radius: 30,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: FittedBox(
+                          child: Text('\$ ${transactions[index].amount}')),
                     ),
+                  ),
+                  title: Text(
+                    transactions[index].title,
+                    style: Theme.of(context).textTheme.headline6,
+                  ),
+                  subtitle: Text(
+                    DateFormat('EEEE, d MMM y', 'id')
+                        .format(transactions[index].date),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  trailing: IconButton(
+                    onPressed: () => deleteTransactions(transactions[index].id),
+                    icon: const Icon(Icons.delete),
+                    color: Theme.of(context).errorColor,
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      transactions[index].title,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      DateFormat('EEEE, d MMM y')
-                          .format(transactions[index].date),
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
-                )
-              ],
-            ),
+              );
+            },
           );
-        },
-      ),
-    );
   }
 }
