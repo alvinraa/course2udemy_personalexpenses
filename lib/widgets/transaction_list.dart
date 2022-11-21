@@ -16,20 +16,24 @@ class TransactionList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return transactions.isEmpty
-        ? Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              Text('No transaction added yet',
-                  style: Theme.of(context).textTheme.headline6),
-              SizedBox(height: 24),
-              Container(
-                height: 300,
-                child: Image.asset(
-                  'assets/images/empty.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ],
+        ? LayoutBuilder(
+            builder: ((context, constraints) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Text('No transaction added yet',
+                      style: Theme.of(context).textTheme.headline6),
+                  SizedBox(height: 24),
+                  Container(
+                    height: constraints.maxHeight * 0.6,
+                    child: Image.asset(
+                      'assets/images/empty.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ],
+              );
+            }),
           )
         : ListView.builder(
             scrollDirection: Axis.vertical,
@@ -59,11 +63,22 @@ class TransactionList extends StatelessWidget {
                         .format(transactions[index].date),
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
-                  trailing: IconButton(
-                    onPressed: () => deleteTransactions(transactions[index].id),
-                    icon: const Icon(Icons.delete),
-                    color: Theme.of(context).errorColor,
-                  ),
+                  // Kondisi untuk menampilkan text delete apabila width > 360.
+                  trailing: MediaQuery.of(context).size.width > 360
+                      ? TextButton.icon(
+                          onPressed: () =>
+                              deleteTransactions(transactions[index].id),
+                          icon: const Icon(Icons.delete),
+                          label: const Text('Delete'),
+                          style: TextButton.styleFrom(
+                              primary: Theme.of(context).errorColor),
+                        )
+                      : IconButton(
+                          onPressed: () =>
+                              deleteTransactions(transactions[index].id),
+                          icon: const Icon(Icons.delete),
+                          color: Theme.of(context).errorColor,
+                        ),
                 ),
               );
             },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -9,6 +10,13 @@ import './widgets/chart.dart';
 import 'colors/palette.dart';
 
 void main() {
+  // fungsinya sama dengan setPreffered, hanya saja sebaiknya menggunakan setPreffered.
+  // WidgetsFlutterBinding.ensureInitialized();
+  // untuk membuat apps tetap potrait
+  // SystemChrome.setPreferredOrientations([
+  //   DeviceOrientation.portraitUp,
+  //   DeviceOrientation.portraitDown,
+  // ]);
   runApp(const MyApp());
 }
 
@@ -65,6 +73,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final List<Transaction> _userTransaction = [];
 
+  bool _showChart = false;
+
   List<Transaction> get _recentTransaction {
     return _userTransaction.where((element) {
       return element.date.isAfter(
@@ -109,6 +119,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final _isLandscape = mediaQuery.orientation == Orientation.landscape;
     //appbar dipisah agar mendapatkan height nya
     final appBar = AppBar(
       title: const Text(
@@ -123,6 +135,16 @@ class _MyHomePageState extends State<MyHomePage> {
       ],
     );
 
+    final transcationListWidget = Container(
+      height: (mediaQuery.size.height -
+              appBar.preferredSize.height -
+              mediaQuery.padding.top) *
+          0.7,
+      child: TransactionList(
+          transactions: _userTransaction,
+          deleteTransactions: _deleteTransaction),
+    );
+
     return Scaffold(
       appBar: appBar,
       body: SingleChildScrollView(
@@ -130,24 +152,46 @@ class _MyHomePageState extends State<MyHomePage> {
           // mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            //diberikan container dan sizenya berdasarkan persentase layar.
-            //dan juga dikurangi dengan tinggi yang telah digunakan oleh
-            //appBar ( appbar.prefersize.height) dan juga statusbar ( mquery.padding.top).
-            Container(
-                height: (MediaQuery.of(context).size.height -
+            // kondisi if didalam list tidak pakai {}
+            // ketika true = ada Row nya, ketika false = do nothing.
+            if (_isLandscape)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  const Text('Show Chart'),
+                  //switch untuk kondisi menampilkan data pada horizontal
+                  Switch(
+                      value: _showChart,
+                      onChanged: (val) {
+                        setState(() {
+                          _showChart = val;
+                        });
+                      })
+                ],
+              ),
+
+            // kondisi apabila layar tidak landscape
+            if (!_isLandscape)
+              Container(
+                height: (mediaQuery.size.height -
                         appBar.preferredSize.height -
-                        MediaQuery.of(context).padding.top) *
+                        mediaQuery.padding.top) *
                     0.3,
-                child: Chart(recentTransactions: _recentTransaction)),
-            Container(
-              height: (MediaQuery.of(context).size.height -
-                      appBar.preferredSize.height -
-                      MediaQuery.of(context).padding.top) *
-                  0.7,
-              child: TransactionList(
-                  transactions: _userTransaction,
-                  deleteTransactions: _deleteTransaction),
-            ),
+                child: Chart(recentTransactions: _recentTransaction),
+              ),
+            if (!_isLandscape) transcationListWidget,
+
+            // kondisi apabila layar landscape
+            if (_isLandscape)
+              _showChart
+                  ? Container(
+                      height: (mediaQuery.size.height -
+                              appBar.preferredSize.height -
+                              mediaQuery.padding.top) *
+                          0.7,
+                      child: Chart(recentTransactions: _recentTransaction),
+                    )
+                  : transcationListWidget,
           ],
         ),
       ),
